@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>บิงโกฟิสิกส์ | กระดานผู้เล่น</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: oklch(0.20 0.045 262);
+    --bg-deep: oklch(0.15 0.045 262);
+    --surface: oklch(0.27 0.05 262);
+    --surface-hi: oklch(0.33 0.055 262);
+    --line: oklch(0.40 0.06 262 / 0.5);
+    --ink: oklch(0.97 0.01 262);
+    --ink-dim: oklch(0.80 0.03 262);
+    --accent: oklch(0.82 0.16 88);
+    --accent-ink: oklch(0.20 0.05 88);
+    --accent-2: oklch(0.72 0.19 45);
+    --free: oklch(0.72 0.19 45);
+    --free-ink: oklch(0.99 0.01 45);
+    --marked: oklch(0.82 0.16 88);
+    --marked-ink: oklch(0.18 0.04 88);
+    --win: oklch(0.78 0.18 145);
+    --shadow: 0 10px 30px oklch(0.10 0.03 262 / 0.55);
+    --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+    --z-banner: 50;
+  }
+
+  *{ box-sizing: border-box; }
+
+  html, body{
+    margin: 0;
+    min-height: 100dvh;
+    background:
+      radial-gradient(ellipse 120% 60% at 50% -10%, oklch(0.30 0.07 262 / 0.9), transparent 60%),
+      var(--bg);
+    color: var(--ink);
+    font-family: "Kanit", "Noto Sans Thai", "Tahoma", system-ui, sans-serif;
+    overflow-x: hidden;
+  }
+
+  body{
+    background-image:
+      radial-gradient(ellipse 120% 60% at 50% -10%, oklch(0.30 0.07 262 / 0.9), transparent 60%),
+      radial-gradient(circle at 15% 20%, oklch(0.82 0.16 88 / 0.06), transparent 40%),
+      radial-gradient(circle at 85% 85%, oklch(0.72 0.19 45 / 0.06), transparent 40%),
+      var(--bg);
+  }
+
+  .orbit-decor{
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.35;
+    z-index: 0;
+  }
+
+  .app{
+    position: relative;
+    z-index: 1;
+    max-width: 640px;
+    margin: 0 auto;
+    padding: clamp(16px, 4vw, 28px) clamp(14px, 4vw, 24px) clamp(32px, 6vw, 48px);
+    display: flex;
+    flex-direction: column;
+    gap: clamp(14px, 3vw, 20px);
+  }
+
+  header{
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding-top: 4px;
+  }
+
+  .eyebrow-row{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-size: 0.8rem;
+    color: var(--accent);
+    font-weight: 600;
+    letter-spacing: 0.02em;
+  }
+
+  .eyebrow-row svg{ width: 16px; height: 16px; }
+
+  h1{
+    font-size: clamp(1.7rem, 7vw, 2.4rem);
+    font-weight: 800;
+    margin: 0;
+    letter-spacing: -0.01em;
+    text-wrap: balance;
+    background: none;
+    color: var(--ink);
+  }
+
+  h1 span{ color: var(--accent); }
+
+  .subtitle{
+    margin: 0;
+    color: var(--ink-dim);
+    font-size: clamp(0.85rem, 3.2vw, 0.98rem);
+    line-height: 1.5;
+    text-wrap: pretty;
+  }
+
+  .board{
+    position: relative;
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: clamp(5px, 1.6vw, 9px);
+    padding: clamp(8px, 2.4vw, 12px);
+    background: linear-gradient(180deg, var(--surface), var(--bg-deep));
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    box-shadow: var(--shadow);
+  }
+
+  .cell{
+    position: relative;
+    aspect-ratio: 1 / 1;
+    border-radius: 12px;
+    border: 1px solid oklch(0.45 0.05 262 / 0.4);
+    background: var(--surface-hi);
+    color: var(--ink);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 6px;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+    transform: scale(1);
+    transition:
+      background-color 220ms var(--ease-out-expo),
+      border-color 220ms var(--ease-out-expo),
+      transform 180ms var(--ease-out-expo),
+      box-shadow 220ms var(--ease-out-expo);
+  }
+
+  .cell:active{ transform: scale(0.94); }
+
+  .cell .txt{
+    font-weight: 600;
+    line-height: 1.22;
+    overflow-wrap: break-word;
+    word-break: break-word;
+    hyphens: auto;
+  }
+
+  .cell[data-len="s"] .txt{ font-size: clamp(0.78rem, 3.4vw, 1.05rem); }
+  .cell[data-len="m"] .txt{ font-size: clamp(0.66rem, 2.7vw, 0.88rem); }
+  .cell[data-len="l"] .txt{ font-size: clamp(0.56rem, 2.25vw, 0.74rem); }
+  .cell[data-len="xl"] .txt{ font-size: clamp(0.5rem, 1.95vw, 0.64rem); }
+
+  .cell.marked{
+    background: var(--marked);
+    border-color: var(--marked);
+    color: var(--marked-ink);
+    box-shadow: 0 0 0 2px oklch(0.82 0.16 88 / 0.35), 0 6px 16px oklch(0.60 0.16 88 / 0.35);
+  }
+
+  .cell.marked::after{
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 12px;
+    animation: pop 260ms var(--ease-out-expo);
+  }
+
+  @keyframes pop{
+    from{ box-shadow: 0 0 0 0 oklch(0.82 0.16 88 / 0.55); }
+    to{ box-shadow: 0 0 0 10px oklch(0.82 0.16 88 / 0); }
+  }
+
+  .cell.free{
+    background: linear-gradient(155deg, var(--free), oklch(0.66 0.19 45));
+    border-color: var(--free);
+    color: var(--free-ink);
+    cursor: default;
+  }
+
+  .cell.free .txt{
+    font-size: clamp(0.85rem, 3.6vw, 1.1rem);
+    font-weight: 800;
+    letter-spacing: 0.03em;
+  }
+
+  .cell.win{
+    animation: winPulse 900ms var(--ease-out-expo) infinite alternate;
+  }
+
+  @keyframes winPulse{
+    from{ box-shadow: 0 0 0 2px oklch(0.78 0.18 145 / 0.5), 0 0 14px oklch(0.78 0.18 145 / 0.4); }
+    to{ box-shadow: 0 0 0 4px oklch(0.78 0.18 145 / 0.75), 0 0 22px oklch(0.78 0.18 145 / 0.65); }
+  }
+
+  footer{
+    text-align: center;
+    color: var(--ink-dim);
+    font-size: 0.78rem;
+    padding-top: 4px;
+  }
+
+  .banner{
+    position: fixed;
+    left: 50%;
+    top: 14%;
+    transform: translate(-50%, -18px) scale(0.92);
+    z-index: var(--z-banner);
+    background: linear-gradient(155deg, var(--accent), var(--accent-2));
+    color: var(--accent-ink);
+    padding: 18px 30px;
+    border-radius: 18px;
+    font-size: clamp(1.4rem, 6vw, 2rem);
+    font-weight: 800;
+    letter-spacing: 0.01em;
+    box-shadow: 0 20px 45px oklch(0.15 0.03 262 / 0.5);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 260ms var(--ease-out-expo), transform 260ms var(--ease-out-expo);
+    text-align: center;
+    white-space: nowrap;
+  }
+
+  .banner.show{
+    opacity: 1;
+    transform: translate(-50%, 0) scale(1);
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .cell, .cell.marked::after, .cell.win, .banner{
+      animation: none !important;
+      transition: opacity 180ms linear, background-color 180ms linear !important;
+    }
+    .cell:active{ transform: none; }
+  }
+
+  @media (min-width: 480px){
+    .board{ gap: 10px; padding: 14px; }
+  }
+</style>
+</head>
+<body>
+  <svg class="orbit-decor" viewBox="0 0 400 400" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+    <circle cx="60" cy="70" r="46" fill="none" stroke="oklch(0.82 0.16 88 / 0.5)" stroke-width="1"/>
+    <circle cx="340" cy="320" r="60" fill="none" stroke="oklch(0.72 0.19 45 / 0.45)" stroke-width="1"/>
+    <ellipse cx="200" cy="200" rx="150" ry="60" fill="none" stroke="oklch(0.6 0.05 262 / 0.5)" stroke-width="1" transform="rotate(30 200 200)"/>
+    <ellipse cx="200" cy="200" rx="150" ry="60" fill="none" stroke="oklch(0.6 0.05 262 / 0.5)" stroke-width="1" transform="rotate(-30 200 200)"/>
+  </svg>
+
+  <div class="app">
+    <header>
+      <div class="eyebrow-row">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2.4"/><ellipse cx="12" cy="12" rx="9" ry="4" transform="rotate(30 12 12)"/><ellipse cx="12" cy="12" rx="9" ry="4" transform="rotate(-30 12 12)"/></svg>
+        <span>ซุ้มวิทยาศาสตร์</span>
+      </div>
+      <h1>บิงโก<span>ฟิสิกส์</span></h1>
+      <p class="subtitle">ฟังคำถามจากพิธีกร แล้วแตะคำตอบที่ตรงกันบนกระดานของคุณ</p>
+    </header>
+
+    <div class="board" id="board" role="grid" aria-label="กระดานบิงโกฟิสิกส์"></div>
+
+    <footer>แตะซ้ำเพื่อยกเลิกการทำเครื่องหมาย · สุ่มตำแหน่งใหม่ทุกครั้งที่โหลดหน้า</footer>
+  </div>
+
+  <div class="banner" id="banner">🎉 บิงโก! 🎉</div>
+
+<script>
+(function(){
+  "use strict";
+
+  var DATA = [
+    { id: 1,  question: "แรงอะไรทำให้รถหยุด?", answer: "แรงเสียดทาน" },
+    { id: 2,  question: "แรง g คือแรงอะไร?", answer: "แรงโน้มถ่วง" },
+    { id: 3,  question: "อะไรทำให้รถเคลื่อนที่เร็วขึ้น เรียกว่าอะไร?", answer: "ความเร็ว" },
+    { id: 4,  question: "s = vt, s คืออะไร?", answer: "ระยะทาง" },
+    { id: 5,  question: "หน่วยของความเร็วคืออะไร?", answer: "เมตร/วินาที (m/s)" },
+    { id: 6,  question: "ความเร็วใช้สัญลักษณ์อะไร?", answer: "v" },
+    { id: 7,  question: "ซุ้มนี้คือซุ้มเกี่ยวกับวิชาอะไร?", answer: "ฟิสิกส์ / เคมี / ชีวะ / ดาราศาสตร์" },
+    { id: 8,  question: "ห้องที่จัดกิจกรรมอยู่คือห้องอะไร?", answer: "(เติมชื่อห้องจริงของงาน)" },
+    { id: 9,  question: "แรงคืออะไร?", answer: "สิ่งที่ทำให้วัตถุเปลี่ยนสภาพการเคลื่อนที่ (แรงผลักหรือแรงดึง)" },
+    { id: 10, question: "หน่วยของแรงคืออะไร?", answer: "นิวตัน (N)" },
+    { id: 11, question: "น้ำหนักมีหน่วยเป็นอะไร?", answer: "นิวตัน (N)" },
+    { id: 12, question: "มวลมีหน่วยเป็นอะไร?", answer: "กิโลกรัม (kg)" },
+    { id: 13, question: null, answer: "FREE", isFree: true },
+    { id: 14, question: "ความเร่งคืออะไร?", answer: "อัตราการเปลี่ยนแปลงความเร็ว" },
+    { id: 15, question: "สัญลักษณ์ของความเร่งคืออะไร?", answer: "a" },
+    { id: 16, question: "หน่วยของความเร่งคืออะไร?", answer: "เมตร/วินาที² (m/s²)" },
+    { id: 17, question: "เวลาใช้สัญลักษณ์อะไร?", answer: "t" },
+    { id: 18, question: "หน่วย SI ของเวลาคืออะไร?", answer: "วินาที (s)" },
+    { id: 19, question: "กฎข้อที่ 1 ของนิวตัน เรียกว่ากฎอะไร?", answer: "กฎความเฉื่อย" },
+    { id: 20, question: "วัตถุที่ไม่มีแรงมากระทำ จะเคลื่อนที่อย่างไร?", answer: "ด้วยความเร็วคงที่ เป็นเส้นตรง" },
+    { id: 21, question: "แรงโน้มถ่วงของโลกมีค่าประมาณเท่าไร?", answer: "9.8 m/s²" },
+    { id: 22, question: "ยกตัวอย่างแรงเสียดทานที่มีประโยชน์", answer: "เช่น การเดิน / การเบรกรถ" },
+    { id: 23, question: "พลังงานจลน์คือพลังงานของอะไร?", answer: "วัตถุที่กำลังเคลื่อนที่" },
+    { id: 24, question: "แสงกับเสียง อะไรเดินทางเร็วกว่ากัน?", answer: "แสง" },
+    { id: 25, question: "โลกหมุนรอบตัวเองใช้เวลากี่ชั่วโมง?", answer: "24 ชั่วโมง" }
+  ];
+
+  var FREE_INDEX = 12; // center of 5x5 grid (row 3, col 3), zero-based
+
+  function shuffle(arr){
+    var a = arr.slice();
+    for (var i = a.length - 1; i > 0; i--){
+      var j = Math.floor(Math.random() * (i + 1));
+      var tmp = a[i]; a[i] = a[j]; a[j] = tmp;
+    }
+    return a;
+  }
+
+  function lenClass(text){
+    var n = (text || "").length;
+    if (n <= 6) return "s";
+    if (n <= 14) return "m";
+    if (n <= 28) return "l";
+    return "xl";
+  }
+
+  var freeItem = DATA.filter(function(d){ return d.isFree; })[0];
+  var others = shuffle(DATA.filter(function(d){ return !d.isFree; }));
+
+  var cells = new Array(25);
+  var oi = 0;
+  for (var i = 0; i < 25; i++){
+    cells[i] = (i === FREE_INDEX) ? freeItem : others[oi++];
+  }
+
+  var boardEl = document.getElementById("board");
+  var markedSet = {};
+  markedSet[FREE_INDEX] = true;
+
+  cells.forEach(function(item, idx){
+    var el = document.createElement("div");
+    el.className = "cell" + (item.isFree ? " free marked" : "");
+    el.setAttribute("data-len", lenClass(item.answer));
+    el.setAttribute("role", "gridcell");
+    el.setAttribute("tabindex", item.isFree ? "-1" : "0");
+    if (!item.isFree) el.setAttribute("aria-pressed", "false");
+
+    var txt = document.createElement("span");
+    txt.className = "txt";
+    txt.textContent = item.answer;
+    el.appendChild(txt);
+
+    if (!item.isFree){
+      el.addEventListener("click", function(){ toggle(idx, el); });
+      el.addEventListener("keydown", function(e){
+        if (e.key === "Enter" || e.key === " "){
+          e.preventDefault();
+          toggle(idx, el);
+        }
+      });
+    }
+
+    boardEl.appendChild(el);
+  });
+
+  var celebratedLines = {};
+
+  function lineIndices(){
+    var lines = [];
+    for (var r = 0; r < 5; r++){
+      var row = []; for (var c = 0; c < 5; c++) row.push(r * 5 + c);
+      lines.push({ key: "r" + r, idx: row });
+    }
+    for (var c2 = 0; c2 < 5; c2++){
+      var col = []; for (var r2 = 0; r2 < 5; r2++) col.push(r2 * 5 + c2);
+      lines.push({ key: "c" + c2, idx: col });
+    }
+    var d1 = [], d2 = [];
+    for (var k = 0; k < 5; k++){ d1.push(k * 5 + k); d2.push(k * 5 + (4 - k)); }
+    lines.push({ key: "d1", idx: d1 });
+    lines.push({ key: "d2", idx: d2 });
+    return lines;
+  }
+
+  var ALL_LINES = lineIndices();
+  var banner = document.getElementById("banner");
+  var bannerTimer = null;
+
+  function checkLines(){
+    var allCellEls = boardEl.children;
+    ALL_LINES.forEach(function(line){
+      var complete = line.idx.every(function(i){ return markedSet[i]; });
+      if (complete && !celebratedLines[line.key]){
+        celebratedLines[line.key] = true;
+        line.idx.forEach(function(i){ allCellEls[i].classList.add("win"); });
+        showBanner();
+      }
+    });
+  }
+
+  function showBanner(){
+    banner.classList.add("show");
+    if (bannerTimer) clearTimeout(bannerTimer);
+    bannerTimer = setTimeout(function(){ banner.classList.remove("show"); }, 2400);
+  }
+
+  banner.addEventListener("click", function(){
+    banner.classList.remove("show");
+    if (bannerTimer) clearTimeout(bannerTimer);
+  });
+
+  function toggle(idx, el){
+    var isMarked = !!markedSet[idx];
+    if (isMarked){
+      delete markedSet[idx];
+      el.classList.remove("marked");
+      el.setAttribute("aria-pressed", "false");
+    } else {
+      markedSet[idx] = true;
+      el.classList.add("marked");
+      el.setAttribute("aria-pressed", "true");
+      checkLines();
+    }
+  }
+})();
+</script>
+</body>
+</html>
