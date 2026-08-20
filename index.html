@@ -273,38 +273,120 @@
     gap: 10px;
   }
 
+  .banner-backdrop{
+    position: fixed;
+    inset: 0;
+    z-index: calc(var(--z-banner) - 2);
+    background: radial-gradient(circle at 50% 32%, oklch(0.20 0.05 262 / 0.35), oklch(0.06 0.02 262 / 0.72));
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 280ms var(--ease-out-expo);
+  }
+
+  .banner-backdrop.show{
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .confetti-layer{
+    position: fixed;
+    inset: 0;
+    z-index: calc(var(--z-banner) - 1);
+    pointer-events: none;
+    overflow: hidden;
+  }
+
+  .confetti-piece{
+    position: absolute;
+    top: -24px;
+    width: 9px;
+    height: 16px;
+    border-radius: 2px;
+    opacity: 0.95;
+    animation-name: confettiFall;
+    animation-timing-function: cubic-bezier(0.4, 0.1, 0.6, 1);
+    animation-fill-mode: forwards;
+  }
+
+  @keyframes confettiFall{
+    0%{ transform: translateY(0) rotate(0deg); opacity: 1; }
+    100%{ transform: translateY(112vh) rotate(640deg); opacity: 0; }
+  }
+
   .banner{
     position: fixed;
     left: 50%;
-    top: 14%;
-    transform: translate(-50%, -18px) scale(0.92);
+    top: 50%;
+    transform: translate(-50%, -50%) scale(0.4);
     z-index: var(--z-banner);
     background: linear-gradient(155deg, var(--accent), var(--accent-2));
     color: var(--accent-ink);
-    padding: 18px 30px;
-    border-radius: 18px;
-    font-size: clamp(1.4rem, 6vw, 2rem);
-    font-weight: 800;
-    letter-spacing: 0.01em;
-    box-shadow: 0 20px 45px oklch(0.15 0.03 262 / 0.5);
+    padding: clamp(22px, 5vw, 34px) clamp(26px, 7vw, 46px);
+    border-radius: 26px;
+    box-shadow: 0 24px 60px oklch(0.10 0.03 262 / 0.65), 0 0 0 6px oklch(1 0 0 / 0.18);
     opacity: 0;
     pointer-events: none;
-    transition: opacity 260ms var(--ease-out-expo), transform 260ms var(--ease-out-expo);
+    transition: opacity 200ms var(--ease-out-expo), transform 200ms var(--ease-out-expo);
     text-align: center;
-    white-space: nowrap;
+    max-width: min(92vw, 420px);
   }
 
   .banner.show{
     opacity: 1;
-    transform: translate(-50%, 0) scale(1);
+    pointer-events: auto;
+    animation: bannerPop 640ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards,
+               bannerGlow 1.3s ease-in-out 640ms infinite;
+  }
+
+  @keyframes bannerPop{
+    0%{ transform: translate(-50%, -50%) scale(0.35) rotate(-7deg); }
+    55%{ transform: translate(-50%, -50%) scale(1.14) rotate(3deg); }
+    75%{ transform: translate(-50%, -50%) scale(0.95) rotate(-1.5deg); }
+    100%{ transform: translate(-50%, -50%) scale(1) rotate(0deg); }
+  }
+
+  @keyframes bannerGlow{
+    0%, 100%{ box-shadow: 0 24px 60px oklch(0.10 0.03 262 / 0.65), 0 0 0 6px oklch(1 0 0 / 0.18); }
+    50%{ box-shadow: 0 24px 70px oklch(0.10 0.03 262 / 0.65), 0 0 0 10px oklch(1 0 0 / 0.3); }
+  }
+
+  .banner-emoji{
+    font-size: clamp(2.2rem, 9vw, 3.2rem);
+    line-height: 1;
+    margin-bottom: 6px;
+    display: inline-block;
+    animation: emojiWiggle 900ms ease-in-out infinite;
+  }
+
+  @keyframes emojiWiggle{
+    0%, 100%{ transform: rotate(-8deg) scale(1); }
+    50%{ transform: rotate(8deg) scale(1.08); }
+  }
+
+  .banner-title{
+    font-size: clamp(2rem, 9vw, 3.2rem);
+    font-weight: 800;
+    letter-spacing: 0.01em;
+    line-height: 1.1;
+  }
+
+  .banner-sub{
+    margin-top: 8px;
+    font-size: clamp(1.05rem, 4.4vw, 1.4rem);
+    font-weight: 700;
+    color: var(--accent-2-ink, var(--accent-ink));
+    opacity: 0.92;
+    line-height: 1.4;
   }
 
   @media (prefers-reduced-motion: reduce){
-    .cell, .cell.marked::after, .cell.win, .banner{
+    .cell, .cell.marked::after, .cell.win, .banner, .banner-emoji, .confetti-piece{
       animation: none !important;
       transition: opacity 180ms linear, background-color 180ms linear !important;
     }
+    .banner.show{ transform: translate(-50%, -50%) scale(1); }
     .cell:active{ transform: none; }
+    .confetti-layer{ display: none; }
   }
 
   @media (min-width: 480px){
@@ -341,7 +423,13 @@
     </footer>
   </div>
 
-  <div class="banner" id="banner">🎉 บิงโก! 🎉</div>
+  <div class="banner-backdrop" id="bannerBackdrop"></div>
+  <div class="confetti-layer" id="confettiLayer"></div>
+  <div class="banner" id="banner">
+    <div class="banner-emoji">🎉🏆🎉</div>
+    <div class="banner-title">บิงโก!</div>
+    <div class="banner-sub">เก่งมากกกก มารับสติกเกอร์ได้เลย</div>
+  </div>
 
 <script>
 (function(){
@@ -358,7 +446,7 @@
     { id: 8,  question: "ห้องที่จัดกิจกรรมอยู่คือห้องอะไร?", answer: "1302" },
     { id: 9,  question: "แรงคืออะไร?", answer: "สิ่งที่ทำให้วัตถุเปลี่ยนสภาพการเคลื่อนที่ (แรงผลักหรือแรงดึง)" },
     { id: 10, question: "หน่วยของแรงคืออะไร?", answer: "นิวตัน (N)" },
-    { id: 11, question: "น้ำหนักมีหน่วยเป็นอะไร?", answer: "นิวตัน" },
+    { id: 11, question: "งานมีหน่วยเป็นอะไร?", answer: "จูล (J)" },
     { id: 12, question: "มวลมีหน่วยเป็นอะไร?", answer: "กิโลกรัม (kg)" },
     { id: 13, question: null, answer: "FREE", isFree: true },
     { id: 14, question: "ความเร่งคืออะไร?", answer: "อัตราการเปลี่ยนแปลงความเร็ว" },
@@ -454,7 +542,30 @@
 
   var ALL_LINES = lineIndices();
   var banner = document.getElementById("banner");
+  var bannerBackdrop = document.getElementById("bannerBackdrop");
+  var confettiLayer = document.getElementById("confettiLayer");
   var bannerTimer = null;
+  var CONFETTI_COLORS = ["#f3c766", "#e2793f", "#34d399", "#38bdf8", "#ffffff"];
+  var reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  function spawnConfetti(){
+    if (reduceMotion) return;
+    confettiLayer.innerHTML = "";
+    var count = 36;
+    for (var i = 0; i < count; i++){
+      var piece = document.createElement("div");
+      piece.className = "confetti-piece";
+      piece.style.left = (Math.random() * 100) + "vw";
+      piece.style.background = CONFETTI_COLORS[i % CONFETTI_COLORS.length];
+      var duration = 1600 + Math.random() * 1400;
+      var delay = Math.random() * 350;
+      piece.style.animationDuration = duration + "ms";
+      piece.style.animationDelay = delay + "ms";
+      piece.style.transform = "rotate(" + Math.floor(Math.random() * 360) + "deg)";
+      confettiLayer.appendChild(piece);
+    }
+    setTimeout(function(){ confettiLayer.innerHTML = ""; }, 3200);
+  }
 
   function checkLines(){
     var allCellEls = boardEl.children;
@@ -468,16 +579,24 @@
     });
   }
 
-  function showBanner(){
-    banner.classList.add("show");
+  function hideBanner(){
+    banner.classList.remove("show");
+    bannerBackdrop.classList.remove("show");
     if (bannerTimer) clearTimeout(bannerTimer);
-    bannerTimer = setTimeout(function(){ banner.classList.remove("show"); }, 2400);
   }
 
-  banner.addEventListener("click", function(){
+  function showBanner(){
     banner.classList.remove("show");
+    void banner.offsetWidth;
+    banner.classList.add("show");
+    bannerBackdrop.classList.add("show");
+    spawnConfetti();
     if (bannerTimer) clearTimeout(bannerTimer);
-  });
+    bannerTimer = setTimeout(hideBanner, 3400);
+  }
+
+  banner.addEventListener("click", hideBanner);
+  bannerBackdrop.addEventListener("click", hideBanner);
 
   function toggle(idx, el){
     var isMarked = !!markedSet[idx];
